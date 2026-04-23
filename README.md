@@ -1,46 +1,27 @@
 # Payment Component Documentation
 
-## English
+This is a payment component for a Java application. It handles money transfers between registered users of the system.
 
-This is a payment component for a Java application. The purpose of this component is to handle money transfers between
-logged-in users of the system. During the payment process, the amount is converted to Russian Rubles (RUB) based on the
-exchange rate provided by the Central Bank of Russia (CBR). Additionally, a transaction fee is calculated depending on
-the transferred amount. Finally, the notification service is called to send push notifications to the involved users.
+During the payment flow, the component:
 
-### Usage
+- Converts the transfer amount to Serbian Dinars (RSD) using the current exchange rate provided by the National Bank of Serbia (NBS).
+- Enriches the user-provided payment description through an LLM to produce a more readable transaction label before it is persisted.
+- Calculates a transaction fee depending on the transferred amount.
+- Invokes the notification service to deliver a push notification to the participants of the transfer.
 
-To use the `PaymentService`, simply call the `processPayment` method, passing in the following parameters:
+## Usage
 
-- `amount`: The amount of money to be transferred.
-- `currency`: The currency in which the amount is specified.
-- `recipientId`: The ID of the recipient user.
+Call `PaymentService#processPayment` with the following parameters:
 
-The method will automatically handle the payment process, including the currency conversion, fee calculation, and
-notification.
+- `amount` — the amount of money to be transferred.
+- `currency` — the currency in which the amount is specified.
+- `recipientId` — the ID of the recipient user.
+- `description` — free-form payment description provided by the sender; it is sent to the LLM for enrichment and stored with the payment.
 
----
+The sender is resolved from the security context (the currently authenticated user).
 
-**Note:** This code review task is intended to be used during an interview. The candidate will be asked to review the
-provided code, identify any issues or improvements, and discuss their suggestions with the interviewer.
-
-## Русский
-
-Данный компонент платежей предназначен для Java-приложения. Он предназначен для обработки перевода денежных средств
-между зарегистрированными пользователями системы. В процессе платежа сумма конвертируется в российские рубли (RUB) по
-курсу, предоставленному Центральным Банком России (ЦБР). Кроме того, рассчитывается комиссия за транзакцию в зависимости
-от переведенной суммы. В конце вызывается сервис нотификаций для отправки push-уведомлений участникам операции.
-
-### Использование
-
-Для использования `PaymentService` достаточно вызвать метод `processPayment`, передав следующие параметры:
-
-- `amount`: Сумма перевода.
-- `currency`: Валюта, в которой указана сумма.
-- `recipientId`: ID пользователя-получателя.
-
-Метод автоматически обработает платеж, включая конвертацию валюты, расчет комиссии и отправку уведомлений.
+The method handles currency conversion, description enrichment, fee calculation, persistence, and notification dispatch in a single call.
 
 ---
 
-**Примечание:** Это задание по проверке кода будет использоваться во время интервью. От кандидата потребуется изучить
-предоставленный код, выявить возможные проблемы или улучшения и обсудить свои предложения с интервьюером.
+**Note:** This code review task is intended to be used during an interview. The candidate will be asked to review the provided code, identify any issues or improvements, and discuss their suggestions with the interviewer.
