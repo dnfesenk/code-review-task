@@ -5,9 +5,9 @@ This is a payment component for a Java application. It handles money transfers b
 During the payment flow, the component:
 
 - Converts the transfer amount to Serbian Dinars (RSD) using the current exchange rate provided by the National Bank of Serbia (NBS).
-- Enriches the user-provided payment description through an LLM to produce a more readable transaction label before it is persisted.
 - Calculates a transaction fee depending on the transferred amount.
 - Invokes the notification service to deliver a push notification to the participants of the transfer.
+- Enriches the user-provided payment description through an LLM to produce a more readable transaction label that is stored with the payment.
 
 ## Usage
 

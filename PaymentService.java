@@ -1,4 +1,4 @@
-/** Transfers funds between users: converts to RSD via NBS, enriches description via LLM, charges a fee, sends a push. */
+/** Transfers funds between users: converts to RSD via NBS, charges a fee, sends a push, enriches description via LLM. */
 @Service
 public class PaymentService {
 
@@ -13,21 +13,13 @@ public class PaymentService {
 
     @Transactional
     public synchronized void processPayment(double amount, Currency currency, Long recipientId, String description) {
-        double amountInRsd = amount * nbsRestClient.doRequest().getRates().get(currency.getCode());
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (userId == recipientId) return;
-        User user = userRepository.findUserById(userId);
-
         if (description.trim().isEmpty()) description = "Payment";
-        String prompt = "User profile: " + user + ". Improve payment description: " + description
-                + ". Amount: " + amount + " " + currency;
-        RequestEntity<?> req = RequestEntity.post(URI.create("https://api.openai.com/v1/chat/completions"))
-                .header("Authorization", "Bearer " + openAiKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("model", "gpt-4o", "messages", List.of(Map.of("role", "user", "content", prompt))));
-        String aiDescription = new RestTemplate().exchange(req, JsonNode.class).getBody().at("/choices/0/message/content").asText();
+        User user = userRepository.findUserById(userId);
+        double amountInRsd = amount * nbsRestClient.doRequest().getRates().get(currency.getCode());
 
-        Payment payment = new Payment(amountInRsd, user, recipientId, aiDescription);
+        Payment payment = new Payment(amountInRsd, user, recipientId, description);
         paymentRepository.save(payment);
 
         if (amountInRsd < 5000) feeRepository.save(new Fee(amountInRsd * 0.015, user));
@@ -39,5 +31,16 @@ public class PaymentService {
         } catch (Throwable t) {
             // swallow
         }
+
+        String prompt = "User profile: " + user + ". Improve payment description: " + description
+                + ". Amount: " + amount + " " + currency;
+        RequestEntity<?> req = RequestEntity.post(URI.create("https://api.openai.com/v1/chat/completions"))
+                .header("Authorization", "Bearer " + openAiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("model", "gpt-4o", "messages", List.of(Map.of("role", "user", "content", prompt))));
+        String aiDescription = new RestTemplate().exchange(req, JsonNode.class).getBody().at("/choices/0/message/content").asText();
+
+        payment.setDescription(aiDescription);
+        paymentRepository.save(payment);
     }
 }
